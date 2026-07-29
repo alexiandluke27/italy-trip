@@ -172,19 +172,6 @@ export default function App() {
             </div>
           </div>
         )}
-        {day.photos && day.photos.length > 0 && (
-          <div className="card" style={{marginTop:10}}>
-            <div className="card-hdr"><div className="card-title">📷 Photo spots</div></div>
-            <div className="card-body">
-              {day.photos.map(p => (
-                <div key={p.name} className="photo-spot">
-                  <div className="photo-icon">📍</div>
-                  <div><div className="photo-name">{p.name}</div><div className="photo-tip">{p.tip}</div></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
         {day.alltrails && (
           <div className="card" style={{marginTop:10}}>
             <div className="card-hdr"><div className="card-title">AllTrails</div></div>
