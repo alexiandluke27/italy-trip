@@ -4,6 +4,8 @@ import { useState, useEffect, useCallback } from 'react'
 import { getSharedData, setSharedData } from '../lib/supabase'
 import { DAYS, BOOKINGS, PACK, DOLOMITE_DAYS, EUR_USD, getCountdown, getTodayNum, DAY_SECTIONS } from '../lib/tripdata'
 
+export const dynamic = 'force-dynamic'
+
 const HERO_IMG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Drei_Zinnen-Tre_Cime_Di_Lavaredo_1.JPG/1200px-Drei_Zinnen-Tre_Cime_Di_Lavaredo_1.JPG'
 
 export default function App() {
