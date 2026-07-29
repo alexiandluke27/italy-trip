@@ -204,7 +204,7 @@ export default function App() {
                   <div className="pass-icon">🎫</div>
                   <div className="pass-info">
                     <div className="pass-label">{p.label}</div>
-                    <div className="pass-open">Open in Google Drive →</div>
+                    <div className="pass-open">Open pass →</div>
                   </div>
                 </div>
               ))}
@@ -415,7 +415,7 @@ export default function App() {
                 <div className="pass-info" onClick={() => window.open(p.url,'_blank')}>
                   <div className="pass-label">{p.label}</div>
                   <div className="pass-day">{p.day === 'all' ? 'All days' : p.day}</div>
-                  <div className="pass-open">Open in Google Drive →</div>
+                  <div className="pass-open">Open pass →</div>
                 </div>
                 <div className="pass-del-btn" onClick={() => deletePass(p.id)}>✕</div>
               </div>
