@@ -221,11 +221,14 @@ export default function App() {
                 <div style={{fontSize:13,lineHeight:2.2,color:'var(--muted)'}}>
                   🚗 <strong style={{color:'var(--text)'}}>Aug 21</strong> — Drive Austin → Houston<br/>
                   ✈️ <strong style={{color:'var(--text)'}}>Aug 22</strong> — Fly Houston → Frankfurt<br/>
-                  🌊 <strong style={{color:'var(--text)'}}>Aug 23–25</strong> — Lake Como with Sabina<br/>
-                  🏔 <strong style={{color:'var(--text)'}}>Aug 26–31</strong> — Dolomites (Ortisei + Cortina)<br/>
-                  🌊 <strong style={{color:'var(--text)'}}>Sep 1</strong> — Back to Lake Como<br/>
-                  🇨🇭 <strong style={{color:'var(--text)'}}>Sep 2–4</strong> — Crans-Montana, Switzerland<br/>
-                  ✈️ <strong style={{color:'var(--text)'}}>Sep 5</strong> — Train to Milan, fly home<br/>
+                  🛬 <strong style={{color:'var(--text)'}}>Aug 23</strong> — 12:00 PM · Land in Milan and head to Como<br/>
+                  🌊 <strong style={{color:'var(--text)'}}>Aug 24 & 25</strong> — Chill in Lake Como<br/>
+                  🏔 <strong style={{color:'var(--text)'}}>Aug 26</strong> — Head to the Dolomites around noon<br/>
+                  🥾 <strong style={{color:'var(--text)'}}>Aug 27–30</strong> — Dolomites (Ortisei + Cortina)<br/>
+                  🌊 <strong style={{color:'var(--text)'}}>Aug 31</strong> — Goodbye Dolomites, hello Como!<br/>
+                  🇨🇭 <strong style={{color:'var(--text)'}}>Sep 1</strong> — Head to Switzerland. Sabina's in charge.<br/>
+                  ⛳ <strong style={{color:'var(--text)'}}>Sep 2–4</strong> — Omega European Masters<br/>
+                  ✈️ <strong style={{color:'var(--text)'}}>Sep 5</strong> — Bye Europe! Train to Milan and fly home<br/>
                   🏠 <strong style={{color:'var(--text)'}}>Sep 6</strong> — Drive Houston → Austin
                 </div>
               </div>
