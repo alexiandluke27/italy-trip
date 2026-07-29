@@ -86,7 +86,12 @@ export default function App() {
       <div key={s.time + s.title} className="tl-item">
         <div className={`tl-dot ${s.dot || ''}`}></div>
         <div className="tl-time">{s.time}</div>
-        <div className="tl-title">{s.title}</div>
+        <div className="tl-title">
+          {s.title}
+          {s.badge && (
+            <span style={{marginLeft:8,fontSize:10,fontWeight:600,letterSpacing:'0.04em',color:'var(--orange)',background:'rgba(212,144,90,0.15)',padding:'2px 7px',borderRadius:20,verticalAlign:'middle',whiteSpace:'nowrap'}}>⚡ {s.badge}</span>
+          )}
+        </div>
         {s.desc && <div className="tl-desc">{s.desc}</div>}
         {s.map && (
           <div className="tl-links">
@@ -298,9 +303,15 @@ export default function App() {
 
     // Detail "page" for a single day
     if (active) {
+      const idx = DAYS.findIndex(d => d.num === active.num)
+      const nextDay = idx >= 0 && idx < DAYS.length - 1 ? DAYS[idx + 1] : null
+      const navLink = {display:'flex',alignItems:'center',gap:6,fontSize:14,color:'var(--accent)',cursor:'pointer'}
       return (
         <div>
-          <div className="back-btn" onClick={() => setOpenDay(null)}>‹ All days</div>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'52px 20px 8px'}}>
+            <div style={navLink} onClick={() => setOpenDay(null)}>‹ All days</div>
+            {nextDay && <div style={navLink} onClick={() => setOpenDay(nextDay.num)}>{nextDay.num} ›</div>}
+          </div>
           <div style={{padding:'0 20px 8px'}}>
             <div style={{fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--muted)',marginBottom:4}}>{active.date}</div>
             <div style={{fontFamily:"'DM Serif Display',serif",fontSize:26,color:'var(--text)',lineHeight:1.15}}>
