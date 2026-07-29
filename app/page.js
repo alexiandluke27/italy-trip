@@ -152,15 +152,25 @@ export default function App() {
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
         {isDol && renderElev(day.elev)}
-        <div className="card">
-          <div className="card-hdr">
-            <div className="card-title">Timeline</div>
-            {showToggle && !inToday && <span style={{fontSize:11,color:'var(--muted)'}}>{v}</span>}
+        {steps.length > 0 ? (
+          <div className="card">
+            <div className="card-hdr">
+              <div className="card-title">Timeline</div>
+              {showToggle && !inToday && <span style={{fontSize:11,color:'var(--muted)'}}>{v}</span>}
+            </div>
+            <div className="card-body">
+              <div className="tl">{steps.map(s => renderStep(s))}</div>
+            </div>
           </div>
-          <div className="card-body">
-            <div className="tl">{steps.map(s => renderStep(s))}</div>
+        ) : (
+          <div className="card">
+            <div className="card-body" style={{textAlign:'center',padding:'22px 16px'}}>
+              <div style={{fontSize:22,marginBottom:6}}>🗓️</div>
+              <div style={{fontSize:13,color:'var(--text)',marginBottom:4}}>Nothing planned yet</div>
+              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5}}>We’ll fill this in closer to the date — depends on Sabina’s schedule.</div>
+            </div>
           </div>
-        </div>
+        )}
         {day.photos && day.photos.length > 0 && (
           <div className="card" style={{marginTop:10}}>
             <div className="card-hdr"><div className="card-title">📷 Photo spots</div></div>
