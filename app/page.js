@@ -21,20 +21,13 @@ export default function App() {
   const [passDay, setPassDay] = useState('all')
   const [countdown, setCountdown] = useState(getCountdown())
   const [loading, setLoading] = useState(true)
-  const dayRefs = useRef({})
+  const daysScreenRef = useRef(null)
 
-  // When a day is opened on the Days tab, scroll its header to the top so you
-  // always start reading from the beginning of that day (collapsing the
-  // previously-open day above otherwise shifts the list and lands you mid-day).
-  function toggleDay(num) {
-    const willOpen = openDay !== num
-    setOpenDay(willOpen ? num : null)
-    if (willOpen) {
-      setTimeout(() => {
-        dayRefs.current[num]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }, 50)
-    }
-  }
+  // Tapping a day opens it as a full detail "page"; reset scroll to top on any
+  // open/back navigation so you always start at the top.
+  useEffect(() => {
+    if (daysScreenRef.current) daysScreenRef.current.scrollTop = 0
+  }, [openDay])
 
   // Load shared data from Supabase on mount
   useEffect(() => {
@@ -301,6 +294,28 @@ export default function App() {
 
   // ── DAYS SCREEN ────────────────────────────────────────────────────────────
   function DaysScreen() {
+    const active = openDay ? DAYS.find(d => d.num === openDay) : null
+
+    // Detail "page" for a single day
+    if (active) {
+      return (
+        <div>
+          <div className="back-btn" onClick={() => setOpenDay(null)}>‹ All days</div>
+          <div style={{padding:'0 20px 8px'}}>
+            <div style={{fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--muted)',marginBottom:4}}>{active.date}</div>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:26,color:'var(--text)',lineHeight:1.15}}>
+              <span style={{color:'var(--accent)'}}>{active.num}</span> · {active.name}
+            </div>
+            <div style={{display:'flex',gap:5,flexWrap:'wrap',marginTop:8}}>
+              {active.tags.map(t => <span key={t.l} className={`dtag dtag-${t.c}`}>{t.l}</span>)}
+            </div>
+          </div>
+          <DayContent day={active} inToday={false} />
+        </div>
+      )
+    }
+
+    // List of all days
     return (
       <div>
         <div className="hdr">
@@ -315,14 +330,13 @@ export default function App() {
               <div style={{fontSize:10,letterSpacing:'0.1em',textTransform:'uppercase',color:'var(--muted)',padding:'14px 16px 6px'}}>{section.label}</div>
               <div style={{background:'var(--surface)',borderRadius:16,margin:'0 16px 8px',overflow:'hidden'}}>
                 {sectionDays.map(d => {
-                  const isOpen = openDay === d.num
                   const tags = d.tags.map(t => (
                     <span key={t.l} className={`dtag dtag-${t.c}`}>{t.l}</span>
                   ))
                   return (
-                    <div key={d.num} ref={el => { dayRefs.current[d.num] = el }} style={{borderBottom:'0.5px solid var(--border)',scrollMarginTop:96}}>
+                    <div key={d.num} style={{borderBottom:'0.5px solid var(--border)'}}>
                       <div
-                        onClick={() => toggleDay(d.num)}
+                        onClick={() => setOpenDay(d.num)}
                         style={{display:'flex',gap:14,alignItems:'flex-start',padding:'14px 16px',cursor:'pointer'}}
                       >
                         <div style={{fontSize:15,fontWeight:600,color:'var(--accent)',minWidth:42,lineHeight:1.2,marginTop:2}}>{d.num}</div>
@@ -331,13 +345,8 @@ export default function App() {
                           <div style={{fontSize:12,color:'var(--muted)',marginBottom:6}}>{d.date}</div>
                           <div style={{display:'flex',gap:5,flexWrap:'wrap'}}>{tags}</div>
                         </div>
-                        <div style={{color:'var(--muted)',fontSize:18,marginTop:8,transition:'transform 0.2s',transform:isOpen?'rotate(90deg)':'rotate(0deg)'}}>›</div>
+                        <div style={{color:'var(--muted)',fontSize:18,marginTop:8}}>›</div>
                       </div>
-                      {isOpen && (
-                        <div style={{borderTop:'0.5px solid var(--border)'}}>
-                          <DayContent day={d} inToday={false} />
-                        </div>
-                      )}
                     </div>
                   )
                 })}
@@ -567,7 +576,7 @@ export default function App() {
       <div className="screen" style={{display: screen==='today' ? 'block' : 'none'}}>
         <TodayScreen />
       </div>
-      <div className="screen" style={{display: screen==='days' ? 'block' : 'none'}}>
+      <div ref={daysScreenRef} className="screen" style={{display: screen==='days' ? 'block' : 'none'}}>
         <DaysScreen />
       </div>
       <div className="screen" style={{display: screen==='passes' ? 'block' : 'none'}}>
