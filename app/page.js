@@ -93,9 +93,12 @@ export default function App() {
           )}
         </div>
         {s.desc && <div className="tl-desc">{s.desc}</div>}
-        {s.map && (
+        {(s.map || (s.links && s.links.length > 0)) && (
           <div className="tl-links">
-            <a className="tl-link" href={s.map} target="_blank" rel="noreferrer">📍 Maps</a>
+            {s.map && <a className="tl-link" href={s.map} target="_blank" rel="noreferrer">📍 Maps</a>}
+            {s.links && s.links.map(l => (
+              <a key={l.url} className={`tl-link ${l.kind === 'at' ? 'at' : l.kind === 'photo' ? 'photo' : ''}`} href={l.url} target="_blank" rel="noreferrer">{l.label}</a>
+            ))}
           </div>
         )}
       </div>
