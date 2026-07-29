@@ -6,7 +6,7 @@ import { DAYS, BOOKINGS, PACK, DOLOMITE_DAYS, EUR_USD, getCountdown, getTodayNum
 
 export const dynamic = 'force-dynamic'
 
-const HERO_IMG = 'https://upload.wikimedia.org/wikipedia/commons/thumb/8/8f/Drei_Zinnen-Tre_Cime_Di_Lavaredo_1.JPG/1200px-Drei_Zinnen-Tre_Cime_Di_Lavaredo_1.JPG'
+const HERO_IMG = 'https://images.unsplash.com/photo-1516483638261-f4dbaf036963?w=1200&q=80'
 
 export default function App() {
   const [screen, setScreen] = useState('today')
