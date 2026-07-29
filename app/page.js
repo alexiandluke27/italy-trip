@@ -223,9 +223,11 @@ export default function App() {
                   ✈️ <strong style={{color:'var(--text)'}}>Aug 22</strong> — Fly Houston → Frankfurt<br/>
                   🛬 <strong style={{color:'var(--text)'}}>Aug 23</strong> — 12:00 PM · Land in Milan and head to Como<br/>
                   🌊 <strong style={{color:'var(--text)'}}>Aug 24 & 25</strong> — Chill in Lake Como<br/>
-                  🏔 <strong style={{color:'var(--text)'}}>Aug 26</strong> — Head to the Dolomites around noon<br/>
-                  🥾 <strong style={{color:'var(--text)'}}>Aug 27–30</strong> — Dolomites (Ortisei + Cortina)<br/>
-                  🌊 <strong style={{color:'var(--text)'}}>Aug 31</strong> — Goodbye Dolomites, hello Como!<br/>
+                  🏔 <strong style={{color:'var(--text)'}}>Aug 26</strong> — Head to the Dolomites around noon → Ortisei<br/>
+                  🥾 <strong style={{color:'var(--text)'}}>Aug 27</strong> — Ortisei<br/>
+                  🚗 <strong style={{color:'var(--text)'}}>Aug 28</strong> — Drive to Cortina<br/>
+                  🥾 <strong style={{color:'var(--text)'}}>Aug 29 & 30</strong> — Cortina<br/>
+                  🌊 <strong style={{color:'var(--text)'}}>Aug 31</strong> — Drive back to Como · goodbye Dolomites, hello Como!<br/>
                   🇨🇭 <strong style={{color:'var(--text)'}}>Sep 1</strong> — Head to Switzerland. Sabina's in charge.<br/>
                   ⛳ <strong style={{color:'var(--text)'}}>Sep 2–4</strong> — Omega European Masters<br/>
                   ✈️ <strong style={{color:'var(--text)'}}>Sep 5</strong> — Bye Europe! Train to Milan and fly home<br/>
