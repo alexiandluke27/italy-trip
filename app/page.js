@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getSharedData, setSharedData } from '../lib/supabase'
 import { DAYS, BOOKINGS, PACK, DOLOMITE_DAYS, EUR_USD, getCountdown, getTodayNum, DAY_SECTIONS } from '../lib/tripdata'
 
@@ -21,6 +21,20 @@ export default function App() {
   const [passDay, setPassDay] = useState('all')
   const [countdown, setCountdown] = useState(getCountdown())
   const [loading, setLoading] = useState(true)
+  const dayRefs = useRef({})
+
+  // When a day is opened on the Days tab, scroll its header to the top so you
+  // always start reading from the beginning of that day (collapsing the
+  // previously-open day above otherwise shifts the list and lands you mid-day).
+  function toggleDay(num) {
+    const willOpen = openDay !== num
+    setOpenDay(willOpen ? num : null)
+    if (willOpen) {
+      setTimeout(() => {
+        dayRefs.current[num]?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 50)
+    }
+  }
 
   // Load shared data from Supabase on mount
   useEffect(() => {
@@ -296,9 +310,9 @@ export default function App() {
                     <span key={t.l} className={`dtag dtag-${t.c}`}>{t.l}</span>
                   ))
                   return (
-                    <div key={d.num} style={{borderBottom:'0.5px solid var(--border)'}}>
+                    <div key={d.num} ref={el => { dayRefs.current[d.num] = el }} style={{borderBottom:'0.5px solid var(--border)',scrollMarginTop:96}}>
                       <div
-                        onClick={() => setOpenDay(isOpen ? null : d.num)}
+                        onClick={() => toggleDay(d.num)}
                         style={{display:'flex',gap:14,alignItems:'flex-start',padding:'14px 16px',cursor:'pointer'}}
                       >
                         <div style={{fontSize:15,fontWeight:600,color:'var(--accent)',minWidth:42,lineHeight:1.2,marginTop:2}}>{d.num}</div>
