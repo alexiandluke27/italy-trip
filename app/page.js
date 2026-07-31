@@ -8,6 +8,34 @@ export const dynamic = 'force-dynamic'
 
 const HERO_IMG = '/hero.jpg'
 
+// Sunrise/sunset via local astronomy (works for any date, no API). Returns UTC hours.
+function sunTimes(lat, lng, year, month, day, isRise, zenith = 90.833) {
+  const RAD = Math.PI / 180, DEG = 180 / Math.PI
+  const N1 = Math.floor(275 * month / 9), N2 = Math.floor((month + 9) / 12), N3 = 1 + Math.floor((year - 4 * Math.floor(year / 4) + 2) / 3)
+  const N = N1 - N2 * N3 + day - 30
+  const lngHour = lng / 15
+  const t = isRise ? N + ((6 - lngHour) / 24) : N + ((18 - lngHour) / 24)
+  const M = (0.9856 * t) - 3.289
+  let L = M + (1.916 * Math.sin(M * RAD)) + (0.020 * Math.sin(2 * M * RAD)) + 282.634; L = ((L % 360) + 360) % 360
+  let RA = DEG * Math.atan(0.91764 * Math.tan(L * RAD)); RA = ((RA % 360) + 360) % 360
+  RA = RA + (Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90); RA = RA / 15
+  const sinDec = 0.39782 * Math.sin(L * RAD), cosDec = Math.cos(Math.asin(sinDec))
+  const cosH = (Math.cos(zenith * RAD) - (sinDec * Math.sin(lat * RAD))) / (cosDec * Math.cos(lat * RAD))
+  if (cosH > 1 || cosH < -1) return null
+  let H = isRise ? 360 - DEG * Math.acos(cosH) : DEG * Math.acos(cosH); H = H / 15
+  const T = H + RA - (0.06571 * t) - 6.622
+  let UT = T - lngHour
+  return ((UT % 24) + 24) % 24
+}
+function fmtSun(utc, tz) {
+  if (utc == null) return '—'
+  let h = ((utc + tz) % 24 + 24) % 24
+  let hr = Math.floor(h), mn = Math.round((h - hr) * 60)
+  if (mn === 60) { mn = 0; hr = (hr + 1) % 24 }
+  const ap = hr < 12 ? 'AM' : 'PM'; const h12 = hr % 12 || 12
+  return `${h12}:${String(mn).padStart(2, '0')} ${ap}`
+}
+
 export default function App() {
   const [screen, setScreen] = useState('today')
   const [version, setVersion] = useState({})
@@ -260,9 +288,15 @@ export default function App() {
     )
   }
 
-  // Live weather card (°F) for a day
-  function renderWeather(num) {
+  // Live weather card (°F) for a day, plus computed sunrise/sunset
+  function renderWeather(day) {
+    const num = day.num
     const w = weather[num]
+    const [mm, dd] = num.split('/').map(Number)
+    const [lat, lon] = day.coords
+    const TZ = 2 // CEST — Italy/Switzerland during the trip
+    const sunrise = fmtSun(sunTimes(lat, lon, 2026, mm, dd, true), TZ)
+    const sunset = fmtSun(sunTimes(lat, lon, 2026, mm, dd, false), TZ)
     const WMO = {
       0:{i:'☀️',t:'Clear'},1:{i:'🌤️',t:'Mostly clear'},2:{i:'⛅',t:'Partly cloudy'},3:{i:'☁️',t:'Cloudy'},
       45:{i:'🌫️',t:'Fog'},48:{i:'🌫️',t:'Fog'},
@@ -290,6 +324,10 @@ export default function App() {
           {w && w.status === 'unavailable' && (
             <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.55}}>Live forecast shows up about 2 weeks before this date. Typical for the Dolomites in late August: mild days in the 60s–70s°F, chilly mornings (colder up high), and afternoon thunderstorms are common — a good reason to start hikes early.</div>
           )}
+          <div style={{display:'flex',gap:18,marginTop:12,paddingTop:12,borderTop:'0.5px solid var(--border)',fontSize:12,color:'var(--muted)'}}>
+            <span>🌅 Sunrise <strong style={{color:'var(--text)',fontWeight:500}}>{sunrise}</strong></span>
+            <span>🌇 Sunset <strong style={{color:'var(--text)',fontWeight:500}}>{sunset}</strong></span>
+          </div>
         </div>
       </div>
     )
@@ -324,7 +362,7 @@ export default function App() {
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
         {day.attire && renderAttire(day.attire)}
-        {day.coords && renderWeather(day.num)}
+        {day.coords && renderWeather(day)}
         {day.route && renderRouteMap(day.route)}
         {isDol && renderElev(day.elev)}
         {(() => {
