@@ -118,9 +118,10 @@ export default function App() {
   function renderStep(s) {
     return (
       <div key={s.time + s.title} className="tl-item">
-        <div className={`tl-dot ${s.dot || ''}`}></div>
-        <div className="tl-time">{s.time}</div>
+        <div className={`tl-dot ${s.dot || ''}`} style={s.opt ? {background:'transparent',border:'2px solid var(--orange)'} : undefined}></div>
+        <div className="tl-time" style={s.opt ? {color:'var(--orange)'} : undefined}>{s.time}</div>
         <div className="tl-title">
+          {s.opt && <span style={{fontSize:9.5,fontWeight:700,letterSpacing:'0.06em',color:'var(--orange)',background:'rgba(212,144,90,0.15)',padding:'2px 7px',borderRadius:20,marginRight:8,verticalAlign:'middle',whiteSpace:'nowrap'}}>＋ OPTIONAL</span>}
           {s.title}
           {s.badge && (
             <span style={{marginLeft:8,fontSize:10,fontWeight:600,letterSpacing:'0.04em',color:'var(--orange)',background:'rgba(212,144,90,0.15)',padding:'2px 7px',borderRadius:20,verticalAlign:'middle',whiteSpace:'nowrap'}}>⚡ {s.badge}</span>
