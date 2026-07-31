@@ -22,6 +22,12 @@ export default function App() {
   const [countdown, setCountdown] = useState(getCountdown())
   const [loading, setLoading] = useState(true)
   const daysScreenRef = useRef(null)
+  // User-added activities, keyed by day num ({ '8/24': [{id,time,title,desc}] })
+  const [activities, setActivities] = useState({})
+  const [addActivityDay, setAddActivityDay] = useState(null)
+  const [actTime, setActTime] = useState('')
+  const [actTitle, setActTitle] = useState('')
+  const [actDesc, setActDesc] = useState('')
 
   // Tapping a day opens it as a full detail "page"; reset scroll to top on any
   // open/back navigation so you always start at the top.
@@ -32,12 +38,14 @@ export default function App() {
   // Load shared data from Supabase on mount
   useEffect(() => {
     async function load() {
-      const [p, c] = await Promise.all([
+      const [p, c, a] = await Promise.all([
         getSharedData('passes'),
         getSharedData('checklist'),
+        getSharedData('activities'),
       ])
       if (p) setPasses(p)
       if (c) setBookings(BOOKINGS.map((b, i) => ({...b, done: c[i] ?? b.done})))
+      if (a) setActivities(a)
       // Load local packing state
       try {
         const saved = localStorage.getItem('it_pack')
@@ -78,6 +86,32 @@ export default function App() {
     try { localStorage.setItem('it_version', JSON.stringify(newV)) } catch(e) {}
   }, [])
 
+  // Save activities to Supabase (shared across phones)
+  const saveActivities = useCallback(async (next) => {
+    setActivities(next)
+    await setSharedData('activities', next)
+  }, [])
+
+  function openAddActivity(dayNum) {
+    setActTime(''); setActTitle(''); setActDesc('')
+    setAddActivityDay(dayNum)
+  }
+
+  async function saveActivity() {
+    if (!actTitle.trim()) return alert('Add a name for the activity')
+    const day = addActivityDay
+    const item = { id: Date.now().toString(), time: actTime.trim(), title: actTitle.trim(), desc: actDesc.trim() }
+    const next = { ...activities, [day]: [...(activities[day] || []), item] }
+    await saveActivities(next)
+    setAddActivityDay(null)
+  }
+
+  function deleteActivity(dayNum, id) {
+    if (!confirm('Remove this activity?')) return
+    const next = { ...activities, [dayNum]: (activities[dayNum] || []).filter(x => x.id !== id) }
+    saveActivities(next)
+  }
+
   const todayNum = getTodayNum()
   const today = todayNum ? DAYS.find(d => d.num === todayNum) : null
 
@@ -101,6 +135,21 @@ export default function App() {
             ))}
           </div>
         )}
+      </div>
+    )
+  }
+
+  // A user-added activity — like a timeline step but with a delete button
+  function renderCustomStep(s, dayNum) {
+    return (
+      <div key={s.id} className="tl-item">
+        <div className="tl-dot" style={{background:'var(--purple)'}}></div>
+        <div className="tl-time">{s.time || 'Anytime'}</div>
+        <div className="tl-title" style={{display:'flex',alignItems:'flex-start',gap:8}}>
+          <span style={{flex:1}}>{s.title}</span>
+          <span onClick={() => deleteActivity(dayNum, s.id)} style={{color:'var(--muted)',cursor:'pointer',fontSize:15,lineHeight:1,padding:'0 2px'}}>✕</span>
+        </div>
+        {s.desc && <div className="tl-desc">{s.desc}</div>}
       </div>
     )
   }
@@ -153,25 +202,33 @@ export default function App() {
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
         {isDol && renderElev(day.elev)}
-        {steps.length > 0 ? (
-          <div className="card">
-            <div className="card-hdr">
-              <div className="card-title">Timeline</div>
-              {showToggle && !inToday && <span style={{fontSize:11,color:'var(--muted)'}}>{v}</span>}
+        {(() => {
+          const custom = activities[day.num] || []
+          const hasSteps = steps.length > 0 || custom.length > 0
+          return (
+            <div className="card">
+              <div className="card-hdr">
+                <div className="card-title">Timeline</div>
+                {showToggle && !inToday && <span style={{fontSize:11,color:'var(--muted)'}}>{v}</span>}
+              </div>
+              <div className="card-body">
+                {hasSteps ? (
+                  <div className="tl">
+                    {steps.map(s => renderStep(s))}
+                    {custom.map(s => renderCustomStep(s, day.num))}
+                  </div>
+                ) : (
+                  <div style={{textAlign:'center',padding:'14px 8px 18px'}}>
+                    <div style={{fontSize:22,marginBottom:6}}>🗓️</div>
+                    <div style={{fontSize:13,color:'var(--text)',marginBottom:4}}>Nothing planned yet</div>
+                    <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5}}>Add your own plans below — they’re shared across all your phones.</div>
+                  </div>
+                )}
+                <button className="btn-ghost" style={{width:'100%',marginTop:14}} onClick={() => openAddActivity(day.num)}>+ Add activity</button>
+              </div>
             </div>
-            <div className="card-body">
-              <div className="tl">{steps.map(s => renderStep(s))}</div>
-            </div>
-          </div>
-        ) : (
-          <div className="card">
-            <div className="card-body" style={{textAlign:'center',padding:'22px 16px'}}>
-              <div style={{fontSize:22,marginBottom:6}}>🗓️</div>
-              <div style={{fontSize:13,color:'var(--text)',marginBottom:4}}>Nothing planned yet</div>
-              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5}}>We’ll fill this in closer to the date — depends on Sabina’s schedule.</div>
-            </div>
-          </div>
-        )}
+          )
+        })()}
         {day.alltrails && (
           <div className="card" style={{marginTop:10}}>
             <div className="card-hdr"><div className="card-title">AllTrails</div></div>
@@ -600,6 +657,30 @@ export default function App() {
           </div>
         ))}
       </nav>
+
+      {addActivityDay && (
+        <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',zIndex:400,display:'flex',alignItems:'flex-end',justifyContent:'center'}} onClick={e=>e.target===e.currentTarget&&setAddActivityDay(null)}>
+          <div style={{background:'var(--surface)',borderRadius:'24px 24px 0 0',width:'100%',maxWidth:430,padding:'24px 20px 40px'}}>
+            <div style={{fontFamily:"'DM Serif Display',serif",fontSize:22,marginBottom:16}}>Add activity · {addActivityDay}</div>
+            <div className="fg">
+              <label className="fl">Time (optional)</label>
+              <input className="fi" type="text" placeholder="e.g. 2:00 PM or Afternoon" value={actTime} onChange={e=>setActTime(e.target.value)} />
+            </div>
+            <div className="fg">
+              <label className="fl">Activity</label>
+              <input className="fi" type="text" placeholder="e.g. Ferry to Bellagio" value={actTitle} onChange={e=>setActTitle(e.target.value)} />
+            </div>
+            <div className="fg">
+              <label className="fl">Notes (optional)</label>
+              <input className="fi" type="text" placeholder="Any details" value={actDesc} onChange={e=>setActDesc(e.target.value)} />
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <button className="btn-ghost" style={{flex:1}} onClick={()=>setAddActivityDay(null)}>Cancel</button>
+              <button className="btn-pri" style={{flex:2,marginTop:0}} onClick={saveActivity}>Save activity</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
