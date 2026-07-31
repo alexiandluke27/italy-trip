@@ -410,13 +410,19 @@ export default function App() {
     // Detail "page" for a single day
     if (active) {
       const idx = DAYS.findIndex(d => d.num === active.num)
+      const prevDay = idx > 0 ? DAYS[idx - 1] : null
       const nextDay = idx >= 0 && idx < DAYS.length - 1 ? DAYS[idx + 1] : null
-      const navLink = {display:'flex',alignItems:'center',gap:6,fontSize:14,color:'var(--accent)',cursor:'pointer'}
+      const navLink = {display:'flex',alignItems:'center',gap:6,fontSize:14,color:'var(--accent)',cursor:'pointer',minWidth:64}
       return (
         <div>
           <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'52px 20px 8px'}}>
-            <div style={navLink} onClick={() => setOpenDay(null)}>‹ All days</div>
-            {nextDay && <div style={navLink} onClick={() => setOpenDay(nextDay.num)}>{nextDay.num} ›</div>}
+            {prevDay
+              ? <div style={navLink} onClick={() => setOpenDay(prevDay.num)}>‹ {prevDay.num}</div>
+              : <div style={{minWidth:64}} />}
+            <div style={{fontSize:12,color:'var(--muted)',cursor:'pointer',textAlign:'center'}} onClick={() => setOpenDay(null)}>All days</div>
+            {nextDay
+              ? <div style={{...navLink, justifyContent:'flex-end'}} onClick={() => setOpenDay(nextDay.num)}>{nextDay.num} ›</div>
+              : <div style={{minWidth:64}} />}
           </div>
           <div style={{padding:'0 20px 8px'}}>
             <div style={{fontSize:10,letterSpacing:'0.12em',textTransform:'uppercase',color:'var(--muted)',marginBottom:4}}>{active.date}</div>
