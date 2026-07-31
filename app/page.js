@@ -207,6 +207,29 @@ export default function App() {
     )
   }
 
+  // "What to wear" card — dress-code level + clothes + shoes
+  function renderAttire(a) {
+    if (!a) return null
+    const styles = {
+      Casual:   {c:'var(--blue)',   bg:'rgba(122,171,204,0.15)'},
+      Athletic: {c:'var(--orange)', bg:'rgba(212,144,90,0.15)'},
+      Hiking:   {c:'var(--red)',    bg:'rgba(224,112,112,0.15)'},
+    }
+    const st = styles[a.level] || {c:'var(--muted)', bg:'var(--surface2)'}
+    return (
+      <div className="card" style={{marginBottom:12}}>
+        <div className="card-hdr">
+          <div className="card-title">👕 What to wear</div>
+          <span style={{fontSize:10,fontWeight:700,letterSpacing:'0.06em',textTransform:'uppercase',color:st.c,background:st.bg,padding:'3px 9px',borderRadius:20}}>{a.level}</span>
+        </div>
+        <div className="card-body">
+          <div style={{fontSize:12.5,color:'var(--muted)',lineHeight:1.55}}><strong style={{color:'var(--text)'}}>Clothes:</strong> {a.clothes}</div>
+          <div style={{fontSize:12.5,color:'var(--muted)',lineHeight:1.55,marginTop:7}}><strong style={{color:'var(--text)'}}>Shoes:</strong> {a.shoes}</div>
+        </div>
+      </div>
+    )
+  }
+
   function DayContent({day, inToday}) {
     const isDol = DOLOMITE_DAYS.includes(day.num)
     const hasV2 = day.v2 && day.v2.length > 0
@@ -235,6 +258,7 @@ export default function App() {
         )}
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
+        {day.attire && renderAttire(day.attire)}
         {day.route && renderRouteMap(day.route)}
         {isDol && renderElev(day.elev)}
         {(() => {
