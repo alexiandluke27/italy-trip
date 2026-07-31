@@ -28,6 +28,9 @@ export default function App() {
   const [actTime, setActTime] = useState('')
   const [actTitle, setActTitle] = useState('')
   const [actDesc, setActDesc] = useState('')
+  // Weather per day num (fetched live from Open-Meteo, °F)
+  const [weather, setWeather] = useState({})
+  const weatherReq = useRef({})
 
   // Tapping a day opens it as a full detail "page"; reset scroll to top on any
   // open/back navigation so you always start at the top.
@@ -114,6 +117,33 @@ export default function App() {
 
   const todayNum = getTodayNum()
   const today = todayNum ? DAYS.find(d => d.num === todayNum) : null
+
+  // Fetch a day's forecast (°F) from Open-Meteo — live when within ~16 days,
+  // otherwise marks it unavailable so we show a seasonal note.
+  const loadWeather = useCallback((d) => {
+    if (!d || !d.coords || weatherReq.current[d.num]) return
+    const num = d.num
+    weatherReq.current[num] = true
+    setWeather(w => ({ ...w, [num]: { status: 'loading' } }))
+    const [mm, dd] = num.split('/')
+    const iso = `2026-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
+    const [lat, lon] = d.coords
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=Europe%2FBerlin&start_date=${iso}&end_date=${iso}`
+    fetch(url)
+      .then(r => (r.ok ? r.json() : Promise.reject()))
+      .then(j => {
+        const dl = j.daily
+        if (!dl || !dl.time || !dl.time.length || dl.temperature_2m_max[0] == null) throw new Error()
+        setWeather(w => ({ ...w, [num]: { status: 'ok', code: dl.weather_code[0], hi: Math.round(dl.temperature_2m_max[0]), lo: Math.round(dl.temperature_2m_min[0]), rain: dl.precipitation_probability_max[0] } }))
+      })
+      .catch(() => {
+        weatherReq.current[num] = false
+        setWeather(w => ({ ...w, [num]: { status: 'unavailable' } }))
+      })
+  }, [])
+
+  useEffect(() => { if (openDay) loadWeather(DAYS.find(x => x.num === openDay)) }, [openDay, loadWeather])
+  useEffect(() => { if (today) loadWeather(today) }, [today, loadWeather])
 
   function renderStep(s) {
     return (
@@ -230,6 +260,41 @@ export default function App() {
     )
   }
 
+  // Live weather card (°F) for a day
+  function renderWeather(num) {
+    const w = weather[num]
+    const WMO = {
+      0:{i:'☀️',t:'Clear'},1:{i:'🌤️',t:'Mostly clear'},2:{i:'⛅',t:'Partly cloudy'},3:{i:'☁️',t:'Cloudy'},
+      45:{i:'🌫️',t:'Fog'},48:{i:'🌫️',t:'Fog'},
+      51:{i:'🌦️',t:'Light drizzle'},53:{i:'🌦️',t:'Drizzle'},55:{i:'🌦️',t:'Drizzle'},
+      61:{i:'🌧️',t:'Light rain'},63:{i:'🌧️',t:'Rain'},65:{i:'🌧️',t:'Heavy rain'},
+      71:{i:'🌨️',t:'Light snow'},73:{i:'🌨️',t:'Snow'},75:{i:'🌨️',t:'Heavy snow'},
+      80:{i:'🌦️',t:'Rain showers'},81:{i:'🌦️',t:'Rain showers'},82:{i:'⛈️',t:'Heavy showers'},
+      85:{i:'🌨️',t:'Snow showers'},86:{i:'🌨️',t:'Snow showers'},
+      95:{i:'⛈️',t:'Thunderstorms'},96:{i:'⛈️',t:'Thunderstorms'},99:{i:'⛈️',t:'Thunderstorms'},
+    }
+    return (
+      <div className="card" style={{marginBottom:12}}>
+        <div className="card-hdr"><div className="card-title">🌤 Weather</div></div>
+        <div className="card-body">
+          {(!w || w.status === 'loading') && <div style={{fontSize:12,color:'var(--muted)'}}>Loading forecast…</div>}
+          {w && w.status === 'ok' && (
+            <div style={{display:'flex',alignItems:'center',gap:14}}>
+              <div style={{fontSize:30,lineHeight:1}}>{(WMO[w.code]||{}).i || '🌡️'}</div>
+              <div>
+                <div style={{fontSize:14,color:'var(--text)'}}>{(WMO[w.code]||{}).t || 'See forecast'}</div>
+                <div style={{fontSize:12,color:'var(--muted)',marginTop:3}}>High {w.hi}°F · Low {w.lo}°F · {w.rain}% chance of rain</div>
+              </div>
+            </div>
+          )}
+          {w && w.status === 'unavailable' && (
+            <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.55}}>Live forecast shows up about 2 weeks before this date. Typical for the Dolomites in late August: mild days in the 60s–70s°F, chilly mornings (colder up high), and afternoon thunderstorms are common — a good reason to start hikes early.</div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   function DayContent({day, inToday}) {
     const isDol = DOLOMITE_DAYS.includes(day.num)
     const hasV2 = day.v2 && day.v2.length > 0
@@ -259,6 +324,7 @@ export default function App() {
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
         {day.attire && renderAttire(day.attire)}
+        {day.coords && renderWeather(day.num)}
         {day.route && renderRouteMap(day.route)}
         {isDol && renderElev(day.elev)}
         {(() => {
