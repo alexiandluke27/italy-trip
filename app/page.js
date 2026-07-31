@@ -192,11 +192,18 @@ export default function App() {
       <div style={{padding: inToday ? '0 16px' : '0 16px 16px'}}>
         {!inToday && <div style={{fontSize:12,color:'var(--muted)',margin:'10px 0 4px'}}>📍 {day.hotel}</div>}
         {showToggle && (
-          <div style={{display:'flex',gap:8,margin:'10px 0 14px'}}>
-            <div className={`sopt ${v==='V1'?'sel':''}`} style={{flex:1,cursor:'pointer',fontSize:12}}
-              onClick={() => saveVersion({...version, [day.num]:'V1'})}>V1</div>
-            <div className={`sopt ${v==='V2'?'sel':''}`} style={{flex:1,cursor:'pointer',fontSize:12}}
-              onClick={() => saveVersion({...version, [day.num]:'V2'})}>⚡ V2</div>
+          <div style={{margin:'10px 0 14px'}}>
+            <div style={{display:'flex',gap:8}}>
+              <div className={`sopt ${v==='V1'?'sel':''}`} style={{flex:1,cursor:'pointer',fontSize:12}}
+                onClick={() => saveVersion({...version, [day.num]:'V1'})}>V1</div>
+              <div className={`sopt ${v==='V2'?'sel':''}`} style={{flex:1,cursor:'pointer',fontSize:12}}
+                onClick={() => saveVersion({...version, [day.num]:'V2'})}>⚡ V2</div>
+            </div>
+            {day.v2note && (
+              <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.55,marginTop:8,padding:'9px 11px',background:'var(--surface2)',borderRadius:8}}>
+                <strong style={{color:'var(--accent)'}}>V1</strong> is the easy-going plan · <strong style={{color:'var(--orange)'}}>⚡ V2</strong> is the ambitious one — {day.v2note}
+              </div>
+            )}
           </div>
         )}
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
