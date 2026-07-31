@@ -181,6 +181,32 @@ export default function App() {
     )
   }
 
+  // Embedded route map for a day (no API key — uses Google's classic embed)
+  function renderRouteMap(route) {
+    if (!route || !route.stops || route.stops.length < 2) return null
+    const enc = s => encodeURIComponent(s)
+    const [first, ...rest] = route.stops
+    const embedSrc = `https://maps.google.com/maps?saddr=${enc(first)}&daddr=${rest.map(enc).join('+to:')}&output=embed`
+    const origin = enc(route.stops[0])
+    const destination = enc(route.stops[route.stops.length - 1])
+    const mid = route.stops.slice(1, -1).map(enc).join('%7C')
+    const mode = route.mode || 'driving'
+    let dirUrl = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=${mode}`
+    if (mid) dirUrl += `&waypoints=${mid}`
+    return (
+      <div className="card" style={{marginBottom:12, overflow:'hidden'}}>
+        <div className="card-hdr"><div className="card-title">🗺️ Route map</div></div>
+        <div style={{width:'100%',height:210,background:'var(--surface2)'}}>
+          <iframe title="Route map" src={embedSrc} style={{border:0,width:'100%',height:'100%',display:'block'}} loading="lazy" referrerPolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <div style={{padding:'11px 14px'}}>
+          {route.caption && <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.5,marginBottom:9}}>{route.caption}</div>}
+          <a className="btn-ghost" href={dirUrl} target="_blank" rel="noreferrer" style={{display:'block',textAlign:'center',textDecoration:'none'}}>Open in Google Maps ↗</a>
+        </div>
+      </div>
+    )
+  }
+
   function DayContent({day, inToday}) {
     const isDol = DOLOMITE_DAYS.includes(day.num)
     const hasV2 = day.v2 && day.v2.length > 0
@@ -209,6 +235,7 @@ export default function App() {
         )}
         {day.cashWarn && <div className="warn-banner" style={{marginBottom:12}}>💵 Bring €100+ cash — Rifugio Locatelli is cash only, no signal.</div>}
         {day.hl && <div className="hl">{day.hl}</div>}
+        {day.route && renderRouteMap(day.route)}
         {isDol && renderElev(day.elev)}
         {(() => {
           const custom = activities[day.num] || []
