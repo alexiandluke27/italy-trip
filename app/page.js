@@ -322,7 +322,7 @@ export default function App() {
             </div>
           )}
           {w && w.status === 'unavailable' && (
-            <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.55}}>Live forecast shows up about 2 weeks before this date. Typical for the Dolomites in late August: mild days in the 60s–70s°F, chilly mornings (colder up high), and afternoon thunderstorms are common — a good reason to start hikes early.</div>
+            <div style={{fontSize:12,color:'var(--muted)',lineHeight:1.55}}>Live forecast shows up about 2 weeks before this date. Typical for the Alps this time of year: mild days in the 60s–70s°F, chilly mornings (colder up high), and afternoon showers/thunderstorms are common — a good reason to start hikes early.</div>
           )}
           <div style={{display:'flex',gap:18,marginTop:12,paddingTop:12,borderTop:'0.5px solid var(--border)',fontSize:12,color:'var(--muted)'}}>
             <span>🌅 Sunrise <strong style={{color:'var(--text)',fontWeight:500}}>{sunrise}</strong></span>
