@@ -179,8 +179,9 @@ export default function App() {
       .then(j => {
         const dl = j.daily
         if (!dl || !dl.time || !dl.time.length || dl.temperature_2m_max[0] == null) throw new Error()
-        const H = j.hourly
-        const hours = (H && H.time) ? H.time.map((tt, i) => ({ h: parseInt(tt.slice(11, 13), 10), temp: Math.round(H.temperature_2m[i]), rain: H.precipitation_probability[i], code: H.weather_code[i] })) : []
+        const H = j.hourly || {}
+        const tp = H.temperature_2m || [], pp = H.precipitation_probability || [], wc = H.weather_code || []
+        const hours = (H.time || []).map((tt, i) => ({ h: parseInt(tt.slice(11, 13), 10), temp: tp[i] != null ? Math.round(tp[i]) : null, rain: pp[i] != null ? pp[i] : null, code: wc[i] != null ? wc[i] : null }))
         setWeather(w => ({ ...w, [num]: { status: 'ok', code: dl.weather_code[0], hi: Math.round(dl.temperature_2m_max[0]), lo: Math.round(dl.temperature_2m_min[0]), rain: dl.precipitation_probability_max[0], hours } }))
       })
       .catch(() => {
@@ -345,11 +346,14 @@ export default function App() {
                     <div key={hr.h} style={{textAlign:'center',minWidth:38,flexShrink:0}}>
                       <div style={{fontSize:10,color:'var(--muted)'}}>{hourLbl(hr.h)}</div>
                       <div style={{fontSize:16,margin:'3px 0'}}>{(WMO[hr.code]||{}).i || ''}</div>
-                      <div style={{fontSize:12,color:'var(--text)'}}>{hr.temp}°</div>
-                      <div style={{fontSize:10,color: hr.rain >= 40 ? 'var(--blue)' : 'var(--muted)'}}>💧{hr.rain}%</div>
+                      <div style={{fontSize:12,color:'var(--text)'}}>{hr.temp != null ? `${hr.temp}°` : '—'}</div>
+                      {hr.rain != null && <div style={{fontSize:10,color: hr.rain >= 40 ? 'var(--blue)' : 'var(--muted)'}}>💧{hr.rain}%</div>}
                     </div>
                   ))}
                 </div>
+              )}
+              {hourly.length > 0 && !hourly.some(x => x.rain != null) && (
+                <div style={{fontSize:11,color:'var(--muted)',marginTop:8}}>Hour-by-hour rain chance fills in a few days closer to the date.</div>
               )}
             </div>
           )}
