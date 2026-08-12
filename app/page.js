@@ -36,6 +36,23 @@ function fmtSun(utc, tz) {
   return `${h12}:${String(mn).padStart(2, '0')} ${ap}`
 }
 
+// Derive the hour window [startHour, endHour] a day's activities span, by
+// reading clock times out of the step labels. Falls back to daytime.
+function activityHourWindow(day) {
+  const re = /(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i
+  const hrs = []
+  for (const s of (day.v1 || [])) {
+    const m = (s.time || '').match(re)
+    if (m) { let h = parseInt(m[1], 10) % 12; if (/pm/i.test(m[3])) h += 12; hrs.push(h) }
+  }
+  if (!hrs.length) return [8, 18]
+  let lo = Math.max(Math.min(...hrs), 4)
+  let hi = Math.min(Math.max(...hrs) + 1, 22)
+  if (hi - lo < 3) hi = Math.min(lo + 3, 23)
+  return [lo, hi]
+}
+function hourLbl(h) { const ap = h < 12 ? 'a' : 'p'; const h12 = h % 12 || 12; return `${h12}${ap}` }
+
 export default function App() {
   const [screen, setScreen] = useState('today')
   const [version, setVersion] = useState({})
@@ -156,13 +173,15 @@ export default function App() {
     const [mm, dd] = num.split('/')
     const iso = `2026-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`
     const [lat, lon] = d.coords
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=Europe%2FBerlin&start_date=${iso}&end_date=${iso}`
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max&hourly=temperature_2m,precipitation_probability,weather_code&temperature_unit=fahrenheit&timezone=Europe%2FBerlin&start_date=${iso}&end_date=${iso}`
     fetch(url)
       .then(r => (r.ok ? r.json() : Promise.reject()))
       .then(j => {
         const dl = j.daily
         if (!dl || !dl.time || !dl.time.length || dl.temperature_2m_max[0] == null) throw new Error()
-        setWeather(w => ({ ...w, [num]: { status: 'ok', code: dl.weather_code[0], hi: Math.round(dl.temperature_2m_max[0]), lo: Math.round(dl.temperature_2m_min[0]), rain: dl.precipitation_probability_max[0] } }))
+        const H = j.hourly
+        const hours = (H && H.time) ? H.time.map((tt, i) => ({ h: parseInt(tt.slice(11, 13), 10), temp: Math.round(H.temperature_2m[i]), rain: H.precipitation_probability[i], code: H.weather_code[i] })) : []
+        setWeather(w => ({ ...w, [num]: { status: 'ok', code: dl.weather_code[0], hi: Math.round(dl.temperature_2m_max[0]), lo: Math.round(dl.temperature_2m_min[0]), rain: dl.precipitation_probability_max[0], hours } }))
       })
       .catch(() => {
         weatherReq.current[num] = false
@@ -307,18 +326,31 @@ export default function App() {
       85:{i:'🌨️',t:'Snow showers'},86:{i:'🌨️',t:'Snow showers'},
       95:{i:'⛈️',t:'Thunderstorms'},96:{i:'⛈️',t:'Thunderstorms'},99:{i:'⛈️',t:'Thunderstorms'},
     }
+    const [lo, hi] = activityHourWindow(day)
+    const hourly = (w && w.status === 'ok' && w.hours) ? w.hours.filter(x => x.h >= lo && x.h <= hi) : []
     return (
       <div className="card" style={{marginBottom:12}}>
         <div className="card-hdr"><div className="card-title">🌤 Weather</div></div>
         <div className="card-body">
           {(!w || w.status === 'loading') && <div style={{fontSize:12,color:'var(--muted)'}}>Loading forecast…</div>}
           {w && w.status === 'ok' && (
-            <div style={{display:'flex',alignItems:'center',gap:14}}>
-              <div style={{fontSize:30,lineHeight:1}}>{(WMO[w.code]||{}).i || '🌡️'}</div>
-              <div>
-                <div style={{fontSize:14,color:'var(--text)'}}>{(WMO[w.code]||{}).t || 'See forecast'}</div>
-                <div style={{fontSize:12,color:'var(--muted)',marginTop:3}}>High {w.hi}°F · Low {w.lo}°F · {w.rain}% chance of rain</div>
+            <div>
+              <div style={{fontSize:12,color:'var(--muted)',marginBottom:10}}>
+                <span style={{fontSize:16,verticalAlign:'middle',marginRight:6}}>{(WMO[w.code]||{}).i || '🌡️'}</span>
+                {(WMO[w.code]||{}).t || 'See forecast'} · High {w.hi}° / Low {w.lo}°F
               </div>
+              {hourly.length > 0 && (
+                <div style={{display:'flex',overflowX:'auto',gap:12,paddingBottom:2}}>
+                  {hourly.map(hr => (
+                    <div key={hr.h} style={{textAlign:'center',minWidth:38,flexShrink:0}}>
+                      <div style={{fontSize:10,color:'var(--muted)'}}>{hourLbl(hr.h)}</div>
+                      <div style={{fontSize:16,margin:'3px 0'}}>{(WMO[hr.code]||{}).i || ''}</div>
+                      <div style={{fontSize:12,color:'var(--text)'}}>{hr.temp}°</div>
+                      <div style={{fontSize:10,color: hr.rain >= 40 ? 'var(--blue)' : 'var(--muted)'}}>💧{hr.rain}%</div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {w && w.status === 'unavailable' && (
